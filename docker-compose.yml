@@ -1,0 +1,25 @@
+version: '3.5'
+
+services:
+  app:
+    build:
+      context: ""
+      dockerfile: Dockerfile.local
+    ports:
+      - "8001:80"
+    networks:
+      local-network:
+        aliases:
+          - rh-collector
+    container_name: rh-collector
+    environment:
+      LISTEN_ADDRESS: :80
+      DSN: root:localdev@tcp(rh-local-mysql:3306)/runehistory_account
+      KAFKA_BROKERS: rh-local-kafka:9092
+      WAIT_HOSTS: rh-local-mysql:3306,rh-local-kafka:9092
+
+networks:
+  local-network:
+    external:
+      name: rh-local-network
+
