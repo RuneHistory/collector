@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
+	"github.com/RuneHistory/collector/internal/application/domain/validate"
 	"github.com/RuneHistory/collector/internal/application/handler/account"
+	"github.com/RuneHistory/collector/internal/application/service"
 	"github.com/RuneHistory/collector/internal/event"
 	"github.com/RuneHistory/collector/internal/migrate"
 	"github.com/RuneHistory/collector/internal/migrate/migrations"
+	"github.com/RuneHistory/collector/internal/repository/mysql"
 	"github.com/Shopify/sarama"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmwri/go-events"
@@ -69,11 +72,21 @@ func main() {
 		panic(err)
 	}
 
-	var subscriber go_events.Subscriber = saramaEvents.NewSubscriber(saramaClient, "rh-collector")
+	bucketRepo := mysql.NewBucketMySQL(db)
+	bucketRules := validate.NewBucketRules(bucketRepo)
+	bucketValidator := validate.NewBucketValidator(bucketRules)
+	bucketService := service.NewBucketService(bucketRepo, bucketValidator)
+
+	accountRepo := mysql.NewAccountMySQL(db)
+	accountRules := validate.NewAccountRules(accountRepo, bucketRepo)
+	accountValidator := validate.NewAccountValidator(accountRules)
+	accountService := service.NewAccountService(accountRepo, accountValidator)
 
 	handlers := []event.Handler{
-		&account.CreateAccountHandler{},
+		account.NewCreateAccountHandler(accountService, bucketService),
 	}
+
+	var subscriber go_events.Subscriber = saramaEvents.NewSubscriber(saramaClient, "rh-collector")
 	event.StartEventHandlers(ctx, wg, subscriber, handlers, errCh)
 
 	// doneCh will be closed once wg is done

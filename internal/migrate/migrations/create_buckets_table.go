@@ -11,8 +11,10 @@ func (m *CreateBucketsTable) GetName() string {
 func (m *CreateBucketsTable) Up(db *sql.DB) error {
 	stmt := "CREATE TABLE buckets (" +
 		"id VARCHAR(36) NOT NULL," +
-		"count int NOT NULL," +
-		"dt_created DATETIME," +
+		"amount int UNSIGNED NOT NULL," +
+		"dt_created DATETIME NOT NULL," +
+		"dt_started DATETIME," +
+		"dt_finished DATETIME," +
 		"PRIMARY KEY (id)" +
 		");"
 	_, err := db.Exec(stmt)

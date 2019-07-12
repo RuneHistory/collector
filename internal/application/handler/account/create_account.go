@@ -2,11 +2,22 @@ package account
 
 import (
 	"fmt"
+	"github.com/RuneHistory/collector/internal/application/service"
 	"github.com/RuneHistory/events"
 	"log"
 )
 
-type CreateAccountHandler struct{}
+func NewCreateAccountHandler(accountService service.Account, bucketService service.Bucket) *CreateAccountHandler {
+	return &CreateAccountHandler{
+		AccountService: accountService,
+		BucketService:  bucketService,
+	}
+}
+
+type CreateAccountHandler struct {
+	AccountService service.Account
+	BucketService  service.Bucket
+}
 
 func (h *CreateAccountHandler) SupportedEventTypes() []string {
 	return []string{
@@ -24,7 +35,26 @@ func (h *CreateAccountHandler) Handle(eventType string, payload []byte) error {
 	}
 
 	log.Printf("creating account: %s\n", event.ID)
-	// TODO: Insert to DB
-	log.Printf("created account: %s\n", event)
+	account, err := h.AccountService.GetById(event.ID)
+	if err != nil {
+		return fmt.Errorf("failed when getting account: %s", err)
+	}
+	if account != nil {
+		log.Printf("Asked to create account %s - already exists", event.ID)
+		return nil
+	}
+	bucket, err := h.BucketService.GetPriorityBucket()
+	if err != nil {
+		return fmt.Errorf("failed when getting priority bucket: %s", err)
+	}
+	account, err = h.AccountService.Create(event.ID, bucket.ID, event.Nickname)
+	if err != nil {
+		return fmt.Errorf("failed when creating account: %s", err)
+	}
+	err = h.BucketService.IncrementAmount(bucket)
+	if err != nil {
+		return fmt.Errorf("failed when incrementing bucket count: %s", err)
+	}
+	log.Printf("created account: %s\n", event.ID)
 	return nil
 }

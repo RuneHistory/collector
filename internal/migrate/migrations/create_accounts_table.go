@@ -13,7 +13,7 @@ func (m *CreateAccountsTable) Up(db *sql.DB) error {
 		"id VARCHAR(36) NOT NULL," +
 		"bucket_id VARCHAR(36) NOT NULL," +
 		"nickname VARCHAR(12) NOT NULL," +
-		"dt_created DATETIME," +
+		"dt_created DATETIME NOT NULL," +
 		"PRIMARY KEY (id)," +
 		"UNIQUE KEY unique_nickname (nickname)," +
 		"FOREIGN KEY fk_bucket_id(bucket_id) REFERENCES buckets(id)" +
