@@ -12,8 +12,6 @@ import (
 	"github.com/RuneHistory/collector/internal/repository/mysql"
 	"github.com/Shopify/sarama"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jmwri/go-events"
-	saramaEvents "github.com/jmwri/go-events/sarama"
 	"log"
 	"os"
 	"os/signal"
@@ -84,10 +82,15 @@ func main() {
 
 	handlers := []event.Handler{
 		account.NewCreateAccountHandler(accountService, bucketService),
+		account.NewRenameAccountHandler(accountService),
 	}
 
-	var subscriber go_events.Subscriber = saramaEvents.NewSubscriber(saramaClient, "rh-collector")
-	event.StartEventHandlers(ctx, wg, subscriber, handlers, errCh)
+	event.StartEventHandlers(ctx, saramaClient, handlers, wg, errCh)
+
+	go func() {
+		err := <-errCh
+		log.Printf("err in handlers: %s", err)
+	}()
 
 	// doneCh will be closed once wg is done
 	doneCh := make(chan struct{})

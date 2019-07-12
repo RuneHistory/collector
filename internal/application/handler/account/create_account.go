@@ -19,6 +19,9 @@ type CreateAccountHandler struct {
 	BucketService  service.Bucket
 }
 
+func (h *CreateAccountHandler) GroupName() string {
+	return "rh-collector.CreateAccountHandler"
+}
 func (h *CreateAccountHandler) SupportedEventTypes() []string {
 	return []string{
 		(&events.NewAccountEvent{}).Type(),
@@ -34,7 +37,7 @@ func (h *CreateAccountHandler) Handle(eventType string, payload []byte) error {
 		return fmt.Errorf("unexpected event payload: %s", err)
 	}
 
-	log.Printf("creating account: %s\n", event.ID)
+	log.Printf("creating account: %s", event.ID)
 	account, err := h.AccountService.GetById(event.ID)
 	if err != nil {
 		return fmt.Errorf("failed when getting account: %s", err)
@@ -55,6 +58,6 @@ func (h *CreateAccountHandler) Handle(eventType string, payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("failed when incrementing bucket count: %s", err)
 	}
-	log.Printf("created account: %s\n", event.ID)
+	log.Printf("created account: %s", event.ID)
 	return nil
 }
