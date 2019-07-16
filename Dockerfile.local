@@ -1,0 +1,18 @@
+FROM golang:1.12.5
+
+ENV PROJECT_DIR /go/collector
+ENV BIN_DIR /go/bin
+ENV GOPATH /go
+ENV GO111MODULE=on
+
+## Add the wait script to the image
+ADD wait /wait
+RUN chmod +x /wait
+
+RUN mkdir -p $PROJECT_DIR
+ADD . $PROJECT_DIR
+WORKDIR $PROJECT_DIR
+
+RUN go mod download && go build -o $BIN_DIR/collector $PROJECT_DIR/cmd/collector/main.go
+
+CMD /wait && $BIN_DIR/collector
