@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/Shopify/sarama"
 	saramaEvents "github.com/jmwri/go-events/sarama"
-	"sync"
 )
 
 type Handler interface {
@@ -13,8 +12,8 @@ type Handler interface {
 	GroupName() string
 }
 
-func StartEventHandler(ctx context.Context, client sarama.Client, handler Handler) error {
-	group, err := sarama.NewConsumerGroupFromClient(handler.GroupName(), client)
+func StartAccountManagementHandlers(ctx context.Context, client sarama.Client, handlers []Handler) error {
+	group, err := sarama.NewConsumerGroupFromClient("rh-collector.accounts", client)
 	if err != nil {
 		return err
 	}
@@ -25,23 +24,16 @@ func StartEventHandler(ctx context.Context, client sarama.Client, handler Handle
 		}
 	}()
 	subscriber := saramaEvents.NewSubscriber(group)
+	for _, handler := range handlers {
+		err := subscriber.AddHandler(handler.SupportedEventTypes(), handler.Handle)
+		if err != nil {
+			return err
+		}
+	}
 
-	err = subscriber.Subscribe(ctx, handler.SupportedEventTypes(), handler.Handle)
+	err = subscriber.Subscribe(ctx)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func StartEventHandlers(ctx context.Context, client sarama.Client, handlers []Handler, wg *sync.WaitGroup, errCh chan<- error) {
-	wg.Add(1)
-	for _, handler := range handlers {
-		go func(h Handler) {
-			err := StartEventHandler(ctx, client, h)
-			if err != nil {
-				errCh <- err
-			}
-			wg.Done()
-		}(handler)
-	}
 }

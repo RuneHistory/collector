@@ -80,12 +80,19 @@ func main() {
 	accountValidator := validate.NewAccountValidator(accountRules)
 	accountService := service.NewAccountService(accountRepo, accountValidator)
 
-	handlers := []event.Handler{
+	accountManagementHandlers := []event.Handler{
 		account.NewCreateAccountHandler(accountService, bucketService),
 		account.NewRenameAccountHandler(accountService),
 	}
 
-	event.StartEventHandlers(ctx, saramaClient, handlers, wg, errCh)
+	wg.Add(1)
+	go func() {
+		err := event.StartAccountManagementHandlers(ctx, saramaClient, accountManagementHandlers)
+		if err != nil {
+			errCh <- err
+		}
+		wg.Done()
+	}()
 
 	go func() {
 		err := <-errCh
