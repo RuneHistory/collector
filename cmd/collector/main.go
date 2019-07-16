@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
-	"github.com/RuneHistory/collector/internal/application/domain/validate"
 	"github.com/RuneHistory/collector/internal/application/handler"
-	"github.com/RuneHistory/collector/internal/application/handler/account"
 	"github.com/RuneHistory/collector/internal/application/service"
+	"github.com/RuneHistory/collector/internal/application/validate"
 	"github.com/RuneHistory/collector/internal/migrate"
 	"github.com/RuneHistory/collector/internal/migrate/migrations"
 	"github.com/RuneHistory/collector/internal/repository/mysql"
@@ -81,8 +80,8 @@ func main() {
 	accountService := service.NewAccountService(accountRepo, accountValidator)
 
 	accountManagementHandlers := []handler.Handler{
-		account.NewCreateAccountHandler(accountService, bucketService),
-		account.NewRenameAccountHandler(accountService),
+		handler.NewCreateAccountHandler(accountService, bucketService),
+		handler.NewRenameAccountHandler(accountService),
 	}
 
 	wg.Add(1)

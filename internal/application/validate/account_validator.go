@@ -1,14 +1,14 @@
 package validate
 
-import "github.com/RuneHistory/collector/internal/application/domain/account"
+import "github.com/RuneHistory/collector/internal/application/domain"
 
 type AccountValidator interface {
 	// A set of different states/actions that may be performed.
 	// Have tests against these funcs to make sure each one tests the resource
 	// as expected.
 	// Each one of these funcs should just use different sets of the "rules" we create in the other files/
-	NewAccount(a *account.Account) error
-	UpdateAccount(a *account.Account) error
+	NewAccount(a *domain.Account) error
+	UpdateAccount(a *domain.Account) error
 }
 
 func NewAccountValidator(accountRules AccountRules) AccountValidator {
@@ -21,7 +21,7 @@ type StdAccountValidator struct {
 	accountRules AccountRules
 }
 
-func (v *StdAccountValidator) NewAccount(a *account.Account) error {
+func (v *StdAccountValidator) NewAccount(a *domain.Account) error {
 	if err := v.accountRules.IDIsPresent(a); err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (v *StdAccountValidator) NewAccount(a *account.Account) error {
 	return nil
 }
 
-func (v *StdAccountValidator) UpdateAccount(a *account.Account) error {
+func (v *StdAccountValidator) UpdateAccount(a *domain.Account) error {
 	if err := v.accountRules.IDIsPresent(a); err != nil {
 		return err
 	}

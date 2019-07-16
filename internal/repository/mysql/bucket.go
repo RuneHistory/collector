@@ -2,7 +2,7 @@ package mysql
 
 import (
 	"database/sql"
-	"github.com/RuneHistory/collector/internal/application/domain/bucket"
+	"github.com/RuneHistory/collector/internal/application/domain"
 	"github.com/go-sql-driver/mysql"
 	"time"
 )
@@ -25,8 +25,8 @@ type BucketMySQL struct {
 	DB *sql.DB
 }
 
-func (r *BucketMySQL) Get() ([]*bucket.Bucket, error) {
-	var buckets []*bucket.Bucket
+func (r *BucketMySQL) Get() ([]*domain.Bucket, error) {
+	var buckets []*domain.Bucket
 	results, err := r.DB.Query("SELECT id, amount, dt_created, dt_started, dt_finished FROM buckets")
 	defer func() {
 		err := results.Close()
@@ -52,7 +52,7 @@ func (r *BucketMySQL) Get() ([]*bucket.Bucket, error) {
 	return buckets, nil
 }
 
-func (r *BucketMySQL) GetById(id string) (*bucket.Bucket, error) {
+func (r *BucketMySQL) GetById(id string) (*domain.Bucket, error) {
 	var nb NullableBucket
 	err := r.DB.QueryRow("SELECT id, amount, dt_created, dt_started, dt_finished FROM buckets where id = ?", id).Scan(&nb.ID, &nb.Amount, &nb.CreatedAt, &nb.StartedAt, &nb.FinishedAt)
 	if err == sql.ErrNoRows {
@@ -77,7 +77,7 @@ func (r *BucketMySQL) CountId(id string) (int, error) {
 	return count, nil
 }
 
-func (r *BucketMySQL) Create(b *bucket.Bucket) (*bucket.Bucket, error) {
+func (r *BucketMySQL) Create(b *domain.Bucket) (*domain.Bucket, error) {
 	nb := r.toNullableBucket(b)
 	_, err := r.DB.Exec("INSERT INTO buckets (id, amount, dt_created, dt_started, dt_finished) VALUES (?, ?, ?, ?, ?)", nb.ID, nb.Amount, nb.CreatedAt, nb.StartedAt, nb.FinishedAt)
 	if err != nil {
@@ -86,7 +86,7 @@ func (r *BucketMySQL) Create(b *bucket.Bucket) (*bucket.Bucket, error) {
 	return b, nil
 }
 
-func (r *BucketMySQL) Update(b *bucket.Bucket) (*bucket.Bucket, error) {
+func (r *BucketMySQL) Update(b *domain.Bucket) (*domain.Bucket, error) {
 	nb := r.toNullableBucket(b)
 	_, err := r.DB.Exec("UPDATE buckets SET dt_started = ?, dt_finished = ? WHERE id = ?", nb.StartedAt, nb.FinishedAt, nb.ID)
 	if err != nil {
@@ -95,7 +95,7 @@ func (r *BucketMySQL) Update(b *bucket.Bucket) (*bucket.Bucket, error) {
 	return b, nil
 }
 
-func (r *BucketMySQL) IncrementAmount(b *bucket.Bucket, amount int) error {
+func (r *BucketMySQL) IncrementAmount(b *domain.Bucket, amount int) error {
 	_, err := r.DB.Exec("UPDATE buckets SET amount = amount + ? WHERE id = ?", amount, b.ID)
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func (r *BucketMySQL) IncrementAmount(b *bucket.Bucket, amount int) error {
 	return nil
 }
 
-func (r *BucketMySQL) fromNullableBucket(nb NullableBucket) *bucket.Bucket {
+func (r *BucketMySQL) fromNullableBucket(nb NullableBucket) *domain.Bucket {
 	startedAt := time.Time{}
 	if nb.StartedAt.Valid {
 		startedAt = nb.StartedAt.Time
@@ -113,7 +113,7 @@ func (r *BucketMySQL) fromNullableBucket(nb NullableBucket) *bucket.Bucket {
 		finishedAt = nb.FinishedAt.Time
 	}
 
-	return &bucket.Bucket{
+	return &domain.Bucket{
 		ID:         nb.ID,
 		Amount:     nb.Amount,
 		CreatedAt:  nb.CreatedAt,
@@ -122,7 +122,7 @@ func (r *BucketMySQL) fromNullableBucket(nb NullableBucket) *bucket.Bucket {
 	}
 }
 
-func (r *BucketMySQL) toNullableBucket(b *bucket.Bucket) NullableBucket {
+func (r *BucketMySQL) toNullableBucket(b *domain.Bucket) NullableBucket {
 	startedAt := mysql.NullTime{
 		Time:  b.StartedAt,
 		Valid: !b.StartedAt.IsZero(),
