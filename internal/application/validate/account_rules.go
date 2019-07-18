@@ -3,8 +3,7 @@ package validate
 import (
 	"errors"
 	"fmt"
-	"github.com/RuneHistory/collector/internal/application/domain/account"
-	"github.com/RuneHistory/collector/internal/application/domain/bucket"
+	"github.com/RuneHistory/collector/internal/application/domain"
 )
 
 const (
@@ -13,19 +12,19 @@ const (
 )
 
 type AccountRules interface {
-	IDIsPresent(a *account.Account) error
-	BucketIDIsPresent(a *account.Account) error
-	IDIsCorrectLength(a *account.Account) error
-	BucketIDIsCorrectLength(a *account.Account) error
-	IDWillBeUnique(a *account.Account) error
-	BucketIDExists(a *account.Account) error
-	IDIsUnique(a *account.Account) error
-	NicknameIsPresent(a *account.Account) error
-	NicknameIsNotTooLong(a *account.Account) error
-	NicknameIsUniqueToID(a *account.Account) error
+	IDIsPresent(a *domain.Account) error
+	BucketIDIsPresent(a *domain.Account) error
+	IDIsCorrectLength(a *domain.Account) error
+	BucketIDIsCorrectLength(a *domain.Account) error
+	IDWillBeUnique(a *domain.Account) error
+	BucketIDExists(a *domain.Account) error
+	IDIsUnique(a *domain.Account) error
+	NicknameIsPresent(a *domain.Account) error
+	NicknameIsNotTooLong(a *domain.Account) error
+	NicknameIsUniqueToID(a *domain.Account) error
 }
 
-func NewAccountRules(accountRepo account.Repository, bucketRepo bucket.Repository) AccountRules {
+func NewAccountRules(accountRepo domain.AccountRepository, bucketRepo domain.BucketRepository) AccountRules {
 	return &StdAccountRules{
 		AccountRepo: accountRepo,
 		BucketRepo:  bucketRepo,
@@ -33,39 +32,39 @@ func NewAccountRules(accountRepo account.Repository, bucketRepo bucket.Repositor
 }
 
 type StdAccountRules struct {
-	AccountRepo account.Repository
-	BucketRepo  bucket.Repository
+	AccountRepo domain.AccountRepository
+	BucketRepo  domain.BucketRepository
 }
 
-func (x *StdAccountRules) IDIsPresent(a *account.Account) error {
+func (x *StdAccountRules) IDIsPresent(a *domain.Account) error {
 	if a.ID == "" {
 		return errors.New("id is blank")
 	}
 	return nil
 }
 
-func (x *StdAccountRules) BucketIDIsPresent(a *account.Account) error {
+func (x *StdAccountRules) BucketIDIsPresent(a *domain.Account) error {
 	if a.BucketID == "" {
 		return errors.New("bucket id is blank")
 	}
 	return nil
 }
 
-func (x *StdAccountRules) IDIsCorrectLength(a *account.Account) error {
+func (x *StdAccountRules) IDIsCorrectLength(a *domain.Account) error {
 	if len(a.ID) != AccountIDLength {
 		return fmt.Errorf("id %s must be exactly %d characters", a.ID, AccountIDLength)
 	}
 	return nil
 }
 
-func (x *StdAccountRules) BucketIDIsCorrectLength(a *account.Account) error {
+func (x *StdAccountRules) BucketIDIsCorrectLength(a *domain.Account) error {
 	if len(a.BucketID) != BucketIDLength {
 		return fmt.Errorf("bucket id %s must be exactly %d characters", a.BucketID, BucketIDLength)
 	}
 	return nil
 }
 
-func (x *StdAccountRules) IDWillBeUnique(a *account.Account) error {
+func (x *StdAccountRules) IDWillBeUnique(a *domain.Account) error {
 	amount, err := x.AccountRepo.CountId(a.ID)
 	if err != nil {
 		return err
@@ -76,7 +75,7 @@ func (x *StdAccountRules) IDWillBeUnique(a *account.Account) error {
 	return nil
 }
 
-func (x *StdAccountRules) BucketIDExists(a *account.Account) error {
+func (x *StdAccountRules) BucketIDExists(a *domain.Account) error {
 	amount, err := x.BucketRepo.CountId(a.BucketID)
 	if err != nil {
 		return err
@@ -87,7 +86,7 @@ func (x *StdAccountRules) BucketIDExists(a *account.Account) error {
 	return nil
 }
 
-func (x *StdAccountRules) IDIsUnique(a *account.Account) error {
+func (x *StdAccountRules) IDIsUnique(a *domain.Account) error {
 	count, err := x.AccountRepo.CountId(a.ID)
 	if err != nil {
 		return err
@@ -98,21 +97,21 @@ func (x *StdAccountRules) IDIsUnique(a *account.Account) error {
 	return nil
 }
 
-func (x *StdAccountRules) NicknameIsPresent(a *account.Account) error {
+func (x *StdAccountRules) NicknameIsPresent(a *domain.Account) error {
 	if a.Nickname == "" {
 		return errors.New("nickname is blank")
 	}
 	return nil
 }
 
-func (x *StdAccountRules) NicknameIsNotTooLong(a *account.Account) error {
+func (x *StdAccountRules) NicknameIsNotTooLong(a *domain.Account) error {
 	if len(a.Nickname) > MaxNicknameLength {
 		return fmt.Errorf("nickname must be no longer than %d characters", MaxNicknameLength)
 	}
 	return nil
 }
 
-func (x *StdAccountRules) NicknameIsUniqueToID(a *account.Account) error {
+func (x *StdAccountRules) NicknameIsUniqueToID(a *domain.Account) error {
 	acc, err := x.AccountRepo.GetByNicknameWithoutId(a.Nickname, a.ID)
 	if err != nil {
 		return err

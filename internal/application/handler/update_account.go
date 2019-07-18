@@ -1,4 +1,4 @@
-package account
+package handler
 
 import (
 	"fmt"
@@ -17,9 +17,6 @@ type RenameAccountHandler struct {
 	AccountService service.Account
 }
 
-func (h *RenameAccountHandler) GroupName() string {
-	return "rh-collector.RenameAccountHandler"
-}
 func (h *RenameAccountHandler) SupportedEventTypes() []string {
 	return []string{
 		(&events.RenameAccountEvent{}).Type(),

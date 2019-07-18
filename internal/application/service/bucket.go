@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
-	"github.com/RuneHistory/collector/internal/application/domain/bucket"
-	"github.com/RuneHistory/collector/internal/application/domain/validate"
+	"github.com/RuneHistory/collector/internal/application/domain"
+	"github.com/RuneHistory/collector/internal/application/validate"
 	"github.com/satori/go.uuid"
 	"sort"
 	"time"
@@ -12,14 +12,14 @@ import (
 const MaxBucketAmount int = 10000
 
 type Bucket interface {
-	Get() ([]*bucket.Bucket, error)
-	GetById(id string) (*bucket.Bucket, error)
-	Create() (*bucket.Bucket, error)
-	GetPriorityBucket() (*bucket.Bucket, error)
-	IncrementAmount(b *bucket.Bucket) error
+	Get() ([]*domain.Bucket, error)
+	GetById(id string) (*domain.Bucket, error)
+	Create() (*domain.Bucket, error)
+	GetPriorityBucket() (*domain.Bucket, error)
+	IncrementAmount(b *domain.Bucket) error
 }
 
-func NewBucketService(repo bucket.Repository, validator validate.BucketValidator) Bucket {
+func NewBucketService(repo domain.BucketRepository, validator validate.BucketValidator) Bucket {
 	return &BucketService{
 		BucketRepo: repo,
 		Validator:  validator,
@@ -27,23 +27,23 @@ func NewBucketService(repo bucket.Repository, validator validate.BucketValidator
 }
 
 type BucketService struct {
-	BucketRepo bucket.Repository
+	BucketRepo domain.BucketRepository
 	Validator  validate.BucketValidator
 }
 
-func (s *BucketService) Get() ([]*bucket.Bucket, error) {
+func (s *BucketService) Get() ([]*domain.Bucket, error) {
 	return s.BucketRepo.Get()
 }
 
-func (s *BucketService) GetById(id string) (*bucket.Bucket, error) {
+func (s *BucketService) GetById(id string) (*domain.Bucket, error) {
 	return s.BucketRepo.GetById(id)
 }
 
-func (s *BucketService) Create() (*bucket.Bucket, error) {
+func (s *BucketService) Create() (*domain.Bucket, error) {
 	id := uuid.NewV4().String()
 	now := time.Now()
 	emptyTime := time.Time{}
-	a := &bucket.Bucket{
+	a := &domain.Bucket{
 		ID:         id,
 		Amount:     0,
 		CreatedAt:  now,
@@ -61,7 +61,7 @@ func (s *BucketService) Create() (*bucket.Bucket, error) {
 	return acc, nil
 }
 
-func (s *BucketService) GetPriorityBucket() (*bucket.Bucket, error) {
+func (s *BucketService) GetPriorityBucket() (*domain.Bucket, error) {
 	buckets, err := s.Get()
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func (s *BucketService) GetPriorityBucket() (*bucket.Bucket, error) {
 	return buckets[0], nil
 }
 
-func (s *BucketService) IncrementAmount(b *bucket.Bucket) error {
+func (s *BucketService) IncrementAmount(b *domain.Bucket) error {
 	err := s.BucketRepo.IncrementAmount(b, 1)
 	if err != nil {
 		return fmt.Errorf("failed to create bucket: %s", err)

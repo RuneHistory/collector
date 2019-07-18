@@ -1,4 +1,4 @@
-package account
+package handler
 
 import (
 	"fmt"
@@ -19,9 +19,6 @@ type CreateAccountHandler struct {
 	BucketService  service.Bucket
 }
 
-func (h *CreateAccountHandler) GroupName() string {
-	return "rh-collector.CreateAccountHandler"
-}
 func (h *CreateAccountHandler) SupportedEventTypes() []string {
 	return []string{
 		(&events.NewAccountEvent{}).Type(),
@@ -43,7 +40,7 @@ func (h *CreateAccountHandler) Handle(eventType string, payload []byte) error {
 		return fmt.Errorf("failed when getting account: %s", err)
 	}
 	if account != nil {
-		log.Printf("Asked to create account %s - already exists", event.ID)
+		log.Printf("can't create account that alrady exists: %s", event.ID)
 		return nil
 	}
 	bucket, err := h.BucketService.GetPriorityBucket()
