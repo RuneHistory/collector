@@ -10,6 +10,7 @@ import (
 type Account interface {
 	Get() ([]*domain.Account, error)
 	GetById(id string) (*domain.Account, error)
+	GetByBucketId(bucketId string) ([]*domain.Account, error)
 	Create(id string, bucketID string, nickname string) (*domain.Account, error)
 	Update(a *domain.Account) (*domain.Account, error)
 }
@@ -32,6 +33,10 @@ func (s *AccountService) Get() ([]*domain.Account, error) {
 
 func (s *AccountService) GetById(id string) (*domain.Account, error) {
 	return s.AccountRepo.GetById(id)
+}
+
+func (s *AccountService) GetByBucketId(bucketId string) ([]*domain.Account, error) {
+	return s.AccountRepo.GetByBucketId(bucketId)
 }
 
 func (s *AccountService) Create(id string, bucketID string, nickname string) (*domain.Account, error) {
